@@ -7,7 +7,7 @@ const int limit=1e2+5;
 vector<int>forword[limit],revers[limit];
 int for_deg[limit] , rev_deg[limit];
 int ft[limit] , es[limit] , ef[limit] , ls[limit] ,lf[limit];
-
+int n , e , u ,v ;
 
 void bfs1(int node){
 
@@ -78,10 +78,24 @@ void bfs2(int node){
     }
 }
 
+void critical_path(int node){
+
+    for(int ch:forword[node]){
+
+            if(es[ch]-ls[ch] ==0){
+
+                if(ch<=n) cout<<ch<<" ";
+                critical_path(ch);
+
+            }
+    }
+
+}
+
 int main(){
     fast;
 
-    int n , e , u ,v ;
+
     cin >> n >> e;
 
     for(int i=0;i<e;i++){
@@ -135,9 +149,12 @@ int main(){
         cout<< ls[i] <<" "<<lf[i] <<endl;
         cout<<endl;
     }
-
+    cout<<"Critical Path is :"<<endl;
+    critical_path(0);
     return 0;
 }
+
+
 
 
 /*
