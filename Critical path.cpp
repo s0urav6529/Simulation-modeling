@@ -2,44 +2,39 @@
 #define fast ios::sync_with_stdio(0);cin.tie(0);cout.tie(0);
 using namespace std;
 
-typedef long long int ll;
 const int limit=1e2+5;
 
-vector<int>adj[limit];
-vector<int>transpose[limit];
-vector<int> Es(limit),Ef(limit),Ls(limit),Lf(limit) ,ft(limit);
-vector<int>for_deg(limit),rev_degree(limit),slack(limit);
-vector<int>ans,critical_path;
-vector<bool>vis={false};
+vector<int>forword[limit],revers[limit];
+int for_deg[limit] , rev_deg[limit];
+int ft[limit] , es[limit] , ef[limit] , ls[limit] ,lf[limit];
 
-void forword_topsort(int n){
+
+void bfs1(int node){
 
     queue<pair<int,int>>q;
-
-    for(int i=1;i<=n;i++){
-
-        if(for_deg[i]==0) q.push({i,0});
-
-    }
+    q.push({node,-1});
 
     while(q.size()>0){
 
         int cur=q.front().first;
-        int st =q.front().second;
-
-        Es[cur]=st;
-        Ef[cur]=ft[cur] + st;
-
-        ans.push_back(cur);
+        int par=q.front().second;
 
         q.pop();
 
-        for(int child: adj[cur]){
+        if(cur>0){
+            ef[cur] = es[cur]+ft[cur];
+        }
 
+        for(int ch:forword[cur]){
 
-            for_deg[child]--;
+            for_deg[ch]--;
 
-            if(for_deg[child]==0) q.push({child,Ef[cur]});
+            es[ch] = max(es[ch], ef[cur]);
+
+            if(for_deg[ch]==0){
+
+                q.push({ ch , cur});
+            }
 
         }
 
@@ -47,41 +42,35 @@ void forword_topsort(int n){
 
 }
 
-void back_topsort(int n){
+void bfs2(int node){
 
     queue<pair<int,int>>q;
+    q.push({node,-1});
 
-    int Max_fin=0;
+    for(int i=0;i<=node+1;i++) lf[i]=101;
 
-    for(int i=1;i<=n;i++){
-
-        if(rev_degree[i]==0) Max_fin=max(Max_fin,Ef[i]);
-
-    }
-
-    for(int i=1;i<=n;i++){
-
-        if(rev_degree[i]==0) q.push({i,Max_fin});
-    }
+    lf[node] = ef[node];
+    ls[node] = ef[node];
 
     while(q.size()>0){
 
-        int cur=q.front().first;
-        int LF =q.front().second;
-
-        Lf[cur]=min(Lf[cur],LF);
-        Ls[cur]=Lf[cur]-ft[cur];
+        int cur= q.front().first;
+        int par = q.front().second;
 
         q.pop();
 
-        for(int child: transpose[cur]){
+        if(cur!=(node+1)){
+            ls[cur] = lf[cur] - ft[cur];
+        }
 
+        for(int ch:revers[cur]){
 
-            rev_degree[child]--;
-            Lf[child]=min(Lf[child],Ls[cur]);
-            if(rev_degree[child]==0) {
-               // cout<< cur  << " "<<child <<" "<< Ls[cur]<<" "  <<Lf[cur]<<endl;
-                q.push({child,Ls[cur]});
+            rev_deg[ch]--;
+
+            lf[ch] = min(lf[ch] , ls[cur]);
+
+            if(rev_deg[ch]==0){
+                q.push({ch,cur});
             }
 
         }
@@ -89,72 +78,78 @@ void back_topsort(int n){
     }
 }
 
-void dfs(int node){
-
-    cout<<node;
-
-    vis[node]=true;
-
-    for(int ch:adj[node]){
-       // cout<<node <<" "<<ch<<" "<<slack[ch]<<endl;
-        if(slack[ch]==0){
-               // cout<<ch<<endl;
-               cout<<"-->";
-                dfs(ch);
-        }
-    }
-}
-
 int main(){
     fast;
 
-    int n , e;  cin >> n >> e;
+    int n , e , u ,v ;
+    cin >> n >> e;
 
-    for(int i=1; i<=n; i++) cin >> ft[i];
+    for(int i=0;i<e;i++){
+        cin >> u >> v;
 
-    for(int i=0;i < e ; i++) {
+        forword[u].push_back(v);
 
-        int u,v; cin >> u >> v;
+        for_deg[v]++;
 
-        adj[u].push_back(v);
-        for_deg[v] ++;
+        revers[v].push_back(u);
 
-        transpose[v].push_back(u);
-        rev_degree[u] ++;
+        rev_deg[u]++;
     }
 
-    forword_topsort(n);
-
-    //for(int i=1;i<=n;i++) cout << Es[i] <<" " << Ef[i]  <<endl;
-
-
-    for(int i=1;i<=n;i++) Lf[i]=1e9;
-
-    back_topsort(n);
-
-//    for(int i=0;i<ans.size();i++){
-//
-//        if(i+1==(int)ans.size()) cout<<ans[i]<<endl;
-//        else cout<<ans[i]<<"-->";
-//    }
-
-    for(int i=1;i<=n;i++) slack[i]=Ls[i]-Es[i];
+    for(int i=1;i<=n;i++) cin >> ft[i];
 
     for(int i=1;i<=n;i++){
 
-        if(slack[i]==0 && vis[i]==false) dfs(i);
+        if(for_deg[i]==0) {
 
+            forword[0].push_back(i);
+            for_deg[i]++;
+
+            revers[i].push_back(0);
+            rev_deg[0]++;
+
+
+        }
     }
-    cout<<endl;
 
-    for(int i=1;i<=n;i++) cout << Es[i] <<" " << Ef[i] << " " <<Ls[i] <<" " << Lf[i] <<" "<<slack[i] <<endl;
+    for(int i=1;i<=n;i++){
 
-    //backword_topsort();
+        if(rev_deg[i]==0) {
 
+            forword[i].push_back(n+1);
+            for_deg[n+1]++;
 
+            revers[n+1].push_back(i);
+            rev_deg[i]++;
+
+        }
+    }
+
+    bfs1(0);
+
+    bfs2(n+1);
+
+    for(int i=0;i<=n+1;i++) {
+        cout<<i <<endl;
+        cout<< es[i] <<" "<<ef[i] <<endl;
+        cout<< ls[i] <<" "<<lf[i] <<endl;
+        cout<<endl;
+    }
 
     return 0;
 }
 
 
+/*
+7 7
+1 3
+1 4
+2 4
+3 5
+4 6
+6 5
+6 7
 
+7 9 12 8 6 9 5
+*/    
+    
