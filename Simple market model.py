@@ -25,3 +25,5 @@ plt.plot(sy,sx)
 print ("P = ",p," Q= ",q," S = ",s)
 plt.plot(q,p,marker ="s",markersize=10)
 
+
+
